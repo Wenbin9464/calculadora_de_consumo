@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Consumo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 手机适配 -->
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #6dd5ed, #2193b0);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+      padding: 15px;
+    }
+
+    .card {
+      background: white;
+      margin: 20px auto;
+      padding: 25px;
+      border-radius: 16px;
+      /* width: 100%;
+      max-width: 500px; */
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      animation: aparecer 0.4s ease;
+    }
+
+    img {
+      width: 160px;
+      cursor: pointer;
+      transition: transform 0.4s ease;
+    }
+
+    img:hover {
+      transform: scale(1.15) rotate(5deg);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .loading {
+      font-size: 22px;
+      margin: 20px;
+      color: #444;
+      font-weight: bold;
+      animation: piscar 1s infinite;
+    }
+
+    @keyframes piscar {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .botoes {
+      display: flex;
+      flex-direction: column; /* 按钮上下排列 */
+      gap: 25px; /* 按钮间距 */
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      padding: 14px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .btn-normal {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-normal:hover {
+      background: linear-gradient(135deg, #5a67d8, #553c9a);
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+    
+    /* 特殊大小：上面按钮大，下面按钮小 */
+    .btn-big {
+      font-size: 18px;
+      padding: 16px 26px;
+    }
+
+    .btn-small {
+      font-size: 14px;
+      padding: 15px 25px;
+      max-width: 250px;
+    }
+
+    .btn-red {
+      background: linear-gradient(135deg, #e63946, #d62828);
+      color: white;
+    }
+
+    .btn-red:hover {
+      background: linear-gradient(135deg, #d62828, #b51717);
+      transform: scale(1.05);
+    }
+
+    input {
+      padding: 12px;
+      margin: 15px auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 280px;
+      display: block;
+      font-size: 15px;
+    }
+
+    @keyframes aparecer {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .relatorio {
+      background: white;
+      padding: 30px 20px;
+      /* width: 100%; */
+      max-width: 550px;
+      font-size: 17px;
+      font-weight: bold;
+      border-radius: 18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    }
+
+    .relatorio h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #222;
+    }
+
+    .relatorio p {
+      margin: 10px 0;
+      font-size: 17px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Início -->
+    <div id="inicio" class="card">
+      <img id="imagem" src="logo.png" alt="Iniciar">
+      <p style="font-size:17px;">Clique na imagem para começar</p>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden card">
+      <p class="loading">Carregando...</p>
+    </div>
+
+    <!-- Opções -->
+    <div id="opcoes" class="hidden card">
+      <h3>Escolha uma opção</h3>
+      <div class="botoes">
+        <button class="btn-normal btn-big" onclick="iniciarFormulario(1)">Cálculo Consumo Médio</button>
+        <button class="btn-normal btn-big" onclick="iniciarFormulario(2)">Cálculo Custo Viagem</button>
+      </div>
+    </div>
+
+    <!-- Formulário -->
+    <div id="formulario" class="hidden card"></div>
+
+    <!-- Relatório -->
+    <div id="relatorio" class="hidden relatorio"></div>
+  </div>
+
+  <script>
+    const inicio = document.getElementById("inicio");
+    const loading = document.getElementById("loading");
+    const opcoes = document.getElementById("opcoes");
+    const formulario = document.getElementById("formulario");
+    const relatorio = document.getElementById("relatorio");
+
+    let etapa = 0;
+    let dados = {};
+    let tipoAtual = null;
+
+    // Clique inicial
+    document.getElementById("imagem").addEventListener("click", () => {
+      inicio.classList.add("hidden");
+      loading.classList.remove("hidden");
+
+      setTimeout(() => {
+        loading.classList.add("hidden");
+        opcoes.classList.remove("hidden");
+      }, 2000);
+    });
+
+    // Iniciar formulário por etapas
+    function iniciarFormulario(tipo) {
+      tipoAtual = tipo;
+      etapa = 0;
+      dados = {};
+      opcoes.classList.add("hidden");
+      formulario.classList.remove("hidden");
+      mostrarEtapa();
+    }
+
+    // Mostrar cada input (um de cada vez)
+    function mostrarEtapa() {
+      formulario.innerHTML = "";
+
+      const perguntas1 = [
+        { id: "distancia_inicial", label: "Distância Inicial (km)", tipo: "number" },
+        { id: "distancia_final", label: "Distância Final (km)", tipo: "number" },
+        { id: "litros_inicial", label: "Litro Inicial", tipo: "number" },
+        { id: "litros_final", label: "Litro Final", tipo: "number" }
+      ];
+
+      const perguntas2 = [
+        { id: "modelo", label: "Modelo do carro", tipo: "text" },
+        { id: "kml", label: "Consumo do carro (km/l)", tipo: "number" },
+        { id: "km", label: "Distância da viagem (km)", tipo: "number" },
+        { id: "preco", label: "Preço por litro (R$)", tipo: "number" }
+      ];
+
+      const perguntas = tipoAtual === 1 ? perguntas1 : perguntas2;
+
+      if (etapa < perguntas.length) {
+        const campo = perguntas[etapa];
+        formulario.innerHTML = `
+          <h3>${campo.label}</h3>
+          <input type="${campo.tipo}" id="inputEtapa" placeholder="${campo.label}">
+          <div class="botoes">
+            <button class="btn-normal" onclick="proximaEtapa('${campo.id}')">Confirmar</button>
+            <button class="btn-red btn-small" onclick="voltarEtapa()">Voltar</button>
+          </div>
+        `;
+
+        // 支持按 Enter 确认
+        const input = document.getElementById("inputEtapa");
+        input.focus();
+        input.addEventListener("keypress", function(e) {
+          if (e.key === "Enter") {
+            proximaEtapa(campo.id);
+          }
+        });
+      } else {
+        processarDados();
+      }
+    }
+
+    // Salvar resposta e ir para próxima etapa
+    function proximaEtapa(idCampo) {
+      const valor = document.getElementById("inputEtapa").value;
+      if (!valor) {
+        alert("Preencha o campo antes de continuar!");
+        return;
+      }
+      dados[idCampo] = valor;
+      etapa++;
+      mostrarEtapa();
+    }
+
+    // Voltar到上一步
+    function voltarEtapa() {
+      if (etapa > 0) {
+        etapa--;
+        mostrarEtapa();
+      } else {
+        formulario.classList.add("hidden");
+        opcoes.classList.remove("hidden");
+      }
+    }
+
+    // Processar os dados e mostrar relatório
+    function processarDados() {
+      formulario.classList.add("hidden");
+      loading.classList.remove("hidden");
+
+      setTimeout(() => {
+        loading.classList.add("hidden");
+        relatorio.classList.remove("hidden");
+
+        if (tipoAtual === 1) {
+          const distancia_inicial = parseFloat(dados.distancia_inicial);
+          const distancia_final = parseFloat(dados.distancia_final);
+          const litros_inicial = parseFloat(dados.litros_inicial);
+          const litros_final = parseFloat(dados.litros_final);
+          const distancia = distancia_final-distancia_inicial;
+          const litros = litros_inicial-litros_final;
+          const consumo = distancia / litros;
+
+          relatorio.innerHTML = `
+            <h3>Relatório de Consumo</h3>
+            <p>Distância percorrida: ${distancia} km</p>
+            <p>Combustível consumido: ${litros} litros</p>
+            <p>Consumo médio: ${consumo.toFixed(2)} km/l</p>
+            <div class="botoes">
+              <button class="btn-normal" onclick="confirmar()">Confirmar</button>
+            </div>
+          `;
+        } else {
+          const modelo = dados.modelo;
+          const kml = parseFloat(dados.kml);
+          const km = parseFloat(dados.km);
+          const preco = parseFloat(dados.preco);
+          const litrosGastos = km / kml;
+          const custoTotal = litrosGastos * preco;
+
+          relatorio.innerHTML = `
+            <h3>Relatório de Viagem</h3>
+            <p>Modelo: ${modelo}</p>
+            <p>Distância: ${km} km</p>
+            <p>Consumo: ${litrosGastos.toFixed(2)} litros</p>
+            <p>Custo Total: R$ ${custoTotal.toFixed(2)}</p>
+            <div class="botoes">
+              <button class="btn-normal" onclick="confirmar()">Confirmar</button>
+            </div>
+          `;
+        }
+      }, 3000);
+    }
+
+    // Confirmar final → volta ao opções
+    function confirmar() {
+      relatorio.classList.add("hidden");
+      opcoes.classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>

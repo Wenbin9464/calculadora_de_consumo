@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Consumo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 手机适配 -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Início -->
+    <div id="inicio" class="card">
+      <img id="imagem" src="assets/img/logo.png" alt="Iniciar">
+      <p style="font-size:17px;">Clique na imagem para começar</p>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden card">
+      <p class="loading">Carregando...</p>
+    </div>
+
+    <!-- Opções -->
+    <div id="opcoes" class="hidden card">
+      <h3>Escolha uma opção</h3>
+      <div class="botoes">
+        <button class="btn-normal btn-big" onclick="iniciarFormulario(1)">Cálculo Consumo Médio</button>
+        <button class="btn-normal btn-big" onclick="iniciarFormulario(2)">Cálculo Custo Viagem</button>
+      </div>
+    </div>
+
+    <!-- Formulário -->
+    <div id="formulario" class="hidden card"></div>
+
+    <!-- Relatório -->
+    <div id="relatorio" class="hidden relatorio"></div>
+  </div>
+
+<script src="assets/js/script.js"></script>
+</body>
+</html>
